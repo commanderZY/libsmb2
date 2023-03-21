@@ -113,6 +113,14 @@ struct srvsvc_rep {
  */
 int smb2_share_enum_async(struct smb2_context *smb2,
                           smb2_command_cb cb, void *cb_data);
+	
+/*
+ * share_enum()
+ * This function only works when connected to the IPC$ share.
+ *
+ * Returns NULL on failure.
+ */
+struct srvsvc_netshareenumall_rep *smb2_share_enum(struct smb2_context *smb2);
 
 int srvsvc_NetrShareEnum_rep_coder(struct dcerpc_context *dce,
                                    struct dcerpc_pdu *pdu,
