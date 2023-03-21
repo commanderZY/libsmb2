@@ -103,9 +103,12 @@ if(NOT ESP_PLATFORM)
     include(cmake/ConfigureChecks.cmake)
 
     include_directories(${CMAKE_CURRENT_BINARY_DIR}
-                        include
-                        include/smb2
-                        ${OPENSSL_INCLUDE_DIR})
+                    include
+                    include/smb2)
+
+    if(OPENSSL_FOUND)
+      include_directories(${OPENSSL_INCLUDE_DIR})
+    endif()
 
     set(core_DEPENDS ${GSSAPI_LIBRARIES} CACHE STRING "" FORCE)
 
