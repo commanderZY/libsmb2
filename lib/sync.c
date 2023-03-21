@@ -886,3 +886,46 @@ int smb2_echo(struct smb2_context *smb2)
 	return rc;
 }
 
+static void se_cb(struct smb2_context *smb2, int status,
+           void *command_data, void *private_data)
+{
+    struct sync_cb_data *cb_data = private_data;
+
+    if (cb_data->status == SMB2_STATUS_CANCELLED) {
+        free(cb_data);
+        return;
+    }
+
+    cb_data->is_finished = 1;
+    cb_data->ptr = command_data;
+}
+
+/*
+ * Get share root dir info from server by IPC$
+ */
+struct srvsvc_netshareenumall_rep *smb2_share_enum(struct smb2_context *smb2)
+{
+    struct sync_cb_data *cb_data;
+    void *ptr;
+
+    cb_data = calloc(1, sizeof(struct sync_cb_data));
+    if (cb_data == NULL) {
+        smb2_set_error(smb2, "Failed to allocate sync_cb_data");
+        return NULL;
+    }
+
+    if (smb2_share_enum_async(smb2, se_cb, cb_data) != 0) {
+        smb2_set_error(smb2, "smb2_share_enum_async failed");
+        free(cb_data);
+        return NULL;
+    }
+
+    if (wait_for_reply(smb2, cb_data) < 0) {
+        cb_data->status = SMB2_STATUS_CANCELLED;
+        return NULL;
+    }
+
+    ptr = cb_data->ptr;
+    free(cb_data);
+    return ptr;
+}
